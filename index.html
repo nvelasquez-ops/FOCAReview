@@ -509,6 +509,18 @@
     </div>
   </div>
 
+  <!-- Secret teacher review modal (Ctrl+Shift+A) -->
+  <div class="modal-overlay hidden" id="reviewModal">
+    <div class="modal" style="max-width:720px;text-align:left;max-height:85vh;overflow-y:auto;">
+      <h3 style="text-align:center;margin-bottom:1rem;">🔒 Teacher Review – All Problems & Answers</h3>
+      <p style="text-align:center;color:var(--muted);font-size:0.9rem;margin-bottom:1rem;">
+        Secret shortcut: <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>A</kbd>
+      </p>
+      <div id="reviewContent"></div>
+      <button class="btn" id="reviewClose" style="width:100%;margin-top:1.25rem;">Close</button>
+    </div>
+  </div>
+
 <script>
 /* ============================================================
    GAME CONFIG – EDIT THIS SECTION TO ADD YOUR OWN CONTENT
@@ -517,7 +529,7 @@ const GAME_CONFIG = {
   possiblePointValues: [-2, -1, 1, 2, 3, 4, 5],
   minSolveSeconds: 30,
 
-  categories: [
+   categories: [
     {
       id: "addPoly",
       name: "Adding and Subtracting Polynomials",
@@ -1310,6 +1322,66 @@ function showFinalScores() {
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 $("btnRestart").addEventListener("click", () => location.reload());
+
+/* ============================================================
+   SECRET TEACHER REVIEW  (Ctrl + Shift + A)
+   ============================================================ */
+function openTeacherReview() {
+  const content = $("reviewContent");
+  let html = "";
+
+  GAME_CONFIG.categories.forEach(cat => {
+    html += `<h4 style="margin:1.25rem 0 0.5rem;border-bottom:1px solid var(--border);padding-bottom:0.3rem;">${cat.name}</h4>`;
+    cat.problems.forEach((p, i) => {
+      html += `
+        <div style="margin-bottom:1rem;padding:0.75rem;background:color-mix(in srgb, var(--muted) 8%, var(--card));border-radius:8px;">
+          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.3rem;">Problem ${i + 1} · id: ${p.id}</div>
+          <div style="margin-bottom:0.4rem;"><strong>Q:</strong> ${p.question}</div>
+          <div><strong>A:</strong> ${p.answer}</div>
+        </div>
+      `;
+    });
+  });
+
+  if (GAME_CONFIG.trivia && GAME_CONFIG.trivia.length) {
+    html += `<h4 style="margin:1.25rem 0 0.5rem;border-bottom:1px solid var(--border);padding-bottom:0.3rem;">Trivia</h4>`;
+    GAME_CONFIG.trivia.forEach((t, i) => {
+      html += `
+        <div style="margin-bottom:1rem;padding:0.75rem;background:color-mix(in srgb, var(--muted) 8%, var(--card));border-radius:8px;">
+          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.3rem;">Trivia ${i + 1} · id: ${t.id}</div>
+          <div style="margin-bottom:0.4rem;"><strong>Q:</strong> ${t.question}</div>
+          <div><strong>A:</strong> ${t.answer}</div>
+        </div>
+      `;
+    });
+  }
+
+  content.innerHTML = html || "<p>No problems found in GAME_CONFIG.</p>";
+  $("reviewModal").classList.remove("hidden");
+
+  // Render KaTeX inside the modal
+  if (window.renderMathInElement) {
+    setTimeout(() => renderMathInElement(content, {
+      delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+    }), 50);
+  }
+}
+
+$("reviewClose").addEventListener("click", () => $("reviewModal").classList.add("hidden"));
+
+document.addEventListener("keydown", (e) => {
+  // Ctrl + Shift + A  (or Cmd + Shift + A on Mac)
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "A" || e.key === "a")) {
+    e.preventDefault();
+    openTeacherReview();
+  }
+  // Also close review modal with Escape
+  if (e.key === "Escape") {
+    $("reviewModal").classList.add("hidden");
+    $("scoreboardModal").classList.add("hidden");
+    $("earlyModal").classList.add("hidden");
+  }
+});
 </script>
 </body>
 </html>

@@ -117,8 +117,6 @@
     .flag.orange { background: var(--flag-orange); }
     .flag.yellow { background: var(--flag-yellow); color: #1a1d26; }
     .flag-icon { font-size: 1.1rem; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
     .category-btn {
       width: 100%;
       text-align: left;
@@ -180,21 +178,21 @@
     }
     .modal h3 { margin-bottom: 0.75rem; }
     .end-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.55rem 1.5rem;
-  border-radius: 10px;
-  background: #ef4444;
-  color: white;
-  border: 2px solid #b91c1c;
-  font-size: 0.95rem;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-  letter-spacing: 0.03em;
-}
-.end-btn:hover { background: #dc2626; transform: translateY(-1px); }
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.55rem 1.5rem;
+      border-radius: 10px;
+      background: #ef4444;
+      color: white;
+      border: 2px solid #b91c1c;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      letter-spacing: 0.03em;
+    }
+    .end-btn:hover { background: #dc2626; transform: translateY(-1px); }
     .theme-toggle {
       background: transparent;
       border: 1px solid var(--border);
@@ -269,7 +267,11 @@
       margin: 1rem 0;
       border: 2px dashed #64748b;
     }
-    footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 2rem; }
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      padding-bottom: 1.5rem;
+    }
   </style>
 </head>
 <body>
@@ -322,7 +324,7 @@
               <li>🔮 <em>Value Reveal</em> – Privately see the point value of one color of your choice. Only you learn it.</li>
             </ul>
           </li>
-          <li>You can end the game at any time with the small red <strong>END</strong> button in the bottom-right corner.</li>
+          <li>You can end the game at any time with the red <strong>END GAME</strong> button at the bottom of the page.</li>
         </ul>
         <button class="btn" id="btnStartGame" style="width:100%;">Start Game 🚀</button>
       </div>
@@ -484,6 +486,11 @@
     </div>
   </div>
 
+  <!-- Footer with End Game button (centered – avoids Netlify badge) -->
+  <footer>
+    <button class="end-btn" id="endGameBtn" title="End Game" style="display:none;">END GAME</button>
+  </footer>
+
   <!-- Modal for early reveal warning -->
   <div class="modal-overlay hidden" id="earlyModal">
     <div class="modal">
@@ -501,10 +508,6 @@
       <button class="btn" id="scoreboardClose" style="width:100%;margin-top:1rem;">Close</button>
     </div>
   </div>
-
-<footer style="text-align:center; margin-top:2rem; padding-bottom:1.5rem;">
-  <button class="end-btn" id="endGameBtn" title="End Game" style="display:none;">END GAME</button>
-</footer>
 
 <script>
 /* ============================================================
@@ -589,7 +592,6 @@ const GAME_CONFIG = {
     }
   ],
 
-  // Trivia is handled separately (never appears as a selectable category)
   trivia: [
     {
       id: "triv1",
@@ -622,7 +624,7 @@ let state = {
   regularProblemsDone: 0,
   problemsSinceLastTrivia: 0,
   lastTriviaDecider: null,
-  pendingTriviaCheck: false,   // true when we should offer trivia after returning to hub
+  pendingTriviaCheck: false,
   currentCategory: null,
   currentProblem: null,
   correctPlayers: [],
@@ -630,8 +632,9 @@ let state = {
   currentStealer: null,
   selectedPower: null,
   powerupWinnerId: null,
-  pointValues: {},             // assigned at game start (hidden)
-  theme: "light"
+  pointValues: {},
+  theme: "light",
+  gameEnded: false
 };
 
 /* ============================================================
@@ -709,13 +712,12 @@ $("btnNamesNext").addEventListener("click", () => {
 });
 
 $("btnStartGame").addEventListener("click", () => {
-  // Assign hidden point values at the start so Value Reveal works
   const vals = shuffle([...GAME_CONFIG.possiblePointValues]);
   state.pointValues = {};
   COLORS.forEach((c, i) => state.pointValues[c] = vals[i % vals.length]);
 
   $("scoreboardBtn").style.display = "inline-flex";
-  $("endGameBtn").style.display = "block";
+  $("endGameBtn").style.display = "inline-flex";
   updateHub();
   showScreen("screen-hub");
 });
@@ -724,7 +726,8 @@ $("btnStartGame").addEventListener("click", () => {
    HUB
    ============================================================ */
 function updateHub() {
-  // After a regular problem, check if we should offer trivia
+  if (state.gameEnded) return;
+
   if (state.pendingTriviaCheck) {
     state.pendingTriviaCheck = false;
     if (state.regularProblemsDone >= 2 && state.problemsSinceLastTrivia >= 2) {
@@ -758,6 +761,8 @@ function updateHub() {
       <div class="player-flags">${flagsHtml(p.flags)}</div>
     </div>
   `).join("");
+
+  showScreen("screen-hub");
 }
 
 function offerTrivia() {
@@ -865,7 +870,6 @@ $("btnAfterAnswer").addEventListener("click", () => {
         state.correctPlayers = state.correctPlayers.filter(id => id !== pid);
       }
 
-      // Enable continue when every row has a selection
       const allAnswered = Array.from(list.querySelectorAll(".player-row")).every(r =>
         Array.from(r.querySelectorAll("button")).some(b => b.classList.contains("selected"))
       );
@@ -883,7 +887,7 @@ $("btnCorrectNext").addEventListener("click", () => {
 
   state.regularProblemsDone++;
   state.problemsSinceLastTrivia++;
-  state.pendingTriviaCheck = true;   // offer trivia (if eligible) when we return to hub
+  state.pendingTriviaCheck = true;
 
   if (state.correctPlayers.length === 0) {
     state.players.forEach(p => {
@@ -910,17 +914,50 @@ function nextSteal() {
     updateHub();
     return;
   }
+
   state.currentStealer = state.stealQueue.shift();
   const stealer = state.players.find(p => p.id === state.currentStealer);
+  if (!stealer) {
+    nextSteal();
+    return;
+  }
+
   $("stealOrderText").textContent = `${stealer.name}'s turn to steal (order randomized)`;
 
+  const others = state.players.filter(p => p.id !== stealer.id);
   const controls = $("stealControls");
+  const confirmBtn = $("btnStealConfirm");
+
+  // No one left to steal from → just continue
+  if (others.length === 0) {
+    controls.innerHTML = `<p class="instructions">No other players to steal from. Continuing…</p>`;
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = "Continue →";
+    showScreen("screen-steal");
+    return;
+  }
+
+  // Check whether any valid steal exists at all
+  let anyValid = false;
+  for (const p of others) {
+    for (const c of COLORS) {
+      if (p.flags[c] > 0) { anyValid = true; break; }
+    }
+    if (anyValid) break;
+  }
+
+  if (!anyValid) {
+    controls.innerHTML = `<p class="instructions">No flags available to steal. Continuing…</p>`;
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = "Continue →";
+    showScreen("screen-steal");
+    return;
+  }
+
   controls.innerHTML = `
     <label>Steal from:</label>
     <select id="stealTarget">
-      ${state.players.filter(p => p.id !== stealer.id).map(p => 
-        `<option value="${p.id}">${p.name}</option>`
-      ).join("")}
+      ${others.map(p => `<option value="${p.id}">${p.name}</option>`).join("")}
     </select>
     <label style="margin-left:0.75rem;">Color:</label>
     <select id="stealColor">
@@ -929,16 +966,24 @@ function nextSteal() {
     <div id="stealPreview" style="margin-top:0.75rem;color:var(--muted);"></div>
   `;
 
+  confirmBtn.textContent = "Steal!";
+  confirmBtn.disabled = true;
+
   function updatePreview() {
-    const tid = parseInt($("stealTarget").value);
-    const color = $("stealColor").value;
+    const targetEl = $("stealTarget");
+    const colorEl = $("stealColor");
+    if (!targetEl || !colorEl) return;
+    const tid = parseInt(targetEl.value);
+    const color = colorEl.value;
     const target = state.players.find(p => p.id === tid);
+    if (!target) return;
     const has = target.flags[color];
-    $("stealPreview").textContent = has > 0 
+    $("stealPreview").textContent = has > 0
       ? `${target.name} has ${has} ${color} flag(s). You can steal one.`
       : `${target.name} has 0 ${color} flags — choose another color or player.`;
-    $("btnStealConfirm").disabled = has === 0;
+    confirmBtn.disabled = has === 0;
   }
+
   $("stealTarget").addEventListener("change", updatePreview);
   $("stealColor").addEventListener("change", updatePreview);
   updatePreview();
@@ -946,14 +991,26 @@ function nextSteal() {
 }
 
 $("btnStealConfirm").addEventListener("click", () => {
-  const tid = parseInt($("stealTarget").value);
-  const color = $("stealColor").value;
+  const targetEl = $("stealTarget");
+  const colorEl = $("stealColor");
+
+  // If there are no selects (edge-case continue), just advance
+  if (!targetEl || !colorEl) {
+    nextSteal();
+    return;
+  }
+
+  const tid = parseInt(targetEl.value);
+  const color = colorEl.value;
   const stealer = state.players.find(p => p.id === state.currentStealer);
   const target = state.players.find(p => p.id === tid);
-  if (target.flags[color] > 0) {
+
+  if (stealer && target && target.flags[color] > 0) {
     target.flags[color]--;
     stealer.flags[color]++;
   }
+
+  // Always advance to the next stealer (or hub)
   nextSteal();
 });
 
@@ -965,8 +1022,6 @@ $("btnTriviaYes").addEventListener("click", () => {
 });
 
 $("btnTriviaNo").addEventListener("click", () => {
-  // Declined → must play another math round before asking someone else
-  // problemsSinceLastTrivia stays as-is so the counter keeps counting
   updateHub();
 });
 
@@ -980,7 +1035,7 @@ $("btnTriviaRulesConfirm").addEventListener("click", () => {
   const problem = randomFrom(available);
   state.usedTrivia.add(problem.id);
   state.currentProblem = problem;
-  state.problemsSinceLastTrivia = 0;   // reset after accepting trivia
+  state.problemsSinceLastTrivia = 0;
 
   $("triviaQuestion").innerHTML = problem.question;
   showScreen("screen-trivia");
@@ -1061,7 +1116,6 @@ document.querySelectorAll(".powerup-card").forEach(card => {
         </div>
         <p id="forcePreview" style="margin-top:0.6rem;color:var(--muted);font-size:0.9rem;"></p>
       `;
-      // live validation
       const updateForcePreview = () => {
         const tid = parseInt($("puTarget").value);
         const c1 = $("puColor1").value;
@@ -1127,7 +1181,6 @@ $("btnPowerupConfirm").addEventListener("click", () => {
     const c2 = $("puColor2").value;
     const target = state.players.find(p => p.id === tid);
 
-    // Take flags from target and give to winner
     if (c1 === c2) {
       if (target.flags[c1] >= 2) {
         target.flags[c1] -= 2;
@@ -1155,7 +1208,7 @@ $("btnPowerupConfirm").addEventListener("click", () => {
       <p style="margin-top:1rem;font-size:0.9rem;opacity:0.8;">Remember this number. Do not tell the others!</p>
     `;
     showScreen("screen-private-reveal");
-    return; // don't go to hub yet
+    return;
   }
 });
 
@@ -1185,8 +1238,13 @@ $("scoreboardClose").addEventListener("click", () => $("scoreboardModal").classL
    END GAME
    ============================================================ */
 $("endGameBtn").addEventListener("click", () => {
+  if (state.gameEnded) return;
   if (!confirm("End the game and reveal the flag values?")) return;
+
+  state.gameEnded = true;
+  $("endGameBtn").style.display = "none";
   clearInterval(timerInterval);
+
   $("endTitle").textContent = "Let's find out how much each flag was worth...";
   $("endContent").innerHTML = "";
   showScreen("screen-end");

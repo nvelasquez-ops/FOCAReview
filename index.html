@@ -519,75 +519,68 @@ const GAME_CONFIG = {
 
   categories: [
     {
-      id: "algebra",
-      name: "Algebra",
+      id: "addPoly",
+      name: "Adding and Subtracting Polynomials",
       problems: [
         {
-          id: "alg1",
-          question: "Solve for $x$: $2x + 5 = 13$",
-          answer: "$x = 4$",
-          suggestedTime: 45
+          id: "addPoly1",
+          question: "Simplify $(-10x^2+6x+3)+(-9x^2+2x-1)$",
+          answer: "$-19x^2+8x+2$",
+          suggestedTime: 120
         },
         {
-          id: "alg2",
-          question: "Simplify: $3(x - 4) + 2x$",
-          answer: "$5x - 12$",
+          id: "addPoly2",
+          question: "Simplify$11x^2-6x-14)-(7x^2+x-4)$",
+          answer: "$4x^2-7x-10$",
+          suggestedTime: 120
+        }
+      ]
+    },
+    {
+      id: "divide",
+      name: "Dividing Polynomials",
+      problems: [
+        {
+          id: "div1",
+          question: "Simplify. $(3x^3-21x^2+20x+6) \div (x+3)$",
+          answer: "$3x^2-30x+110+\frac{-324}{x+3}$"
+          suggestedTime: 240
+        },
+        {
+          id: "div2",
+          question: "Simplify. $(6x^3+7x^2-9x-2)\div (2x-1)$",
+          answer: "$3x^2+5x-2+\frac{-4}{2x-1}$",
+          suggestedTime: 240
+        }
+      ]
+    },
+    {
+      id: "multiply",
+      name: "Multiplying Polynomials",
+      problems: [
+        {
+          id: "mult1",
+          question: "Simplify. $(6x^2-3x+4)(7x+2)$",
+          answer: "$42x^3-9x^2+22x+8$"
           suggestedTime: 60
-        },
-        {
-          id: "alg3",
-          question: "Solve: $\\dfrac{x}{3} + 7 = 10$",
-          answer: "$x = 9$",
-          suggestedTime: 50
         }
-      ]
     },
     {
-      id: "geometry",
-      name: "Geometry",
+      id: "factor",
+      name: "Factoring Polynomials",
       problems: [
         {
-          id: "geo1",
-          question: "A right triangle has legs of length 6 and 8. What is the length of the hypotenuse?",
-          answer: "$10$",
-          suggestedTime: 40
+          id: "factor1",
+          question: "Factor: $-30y^5z-48x^3y^3-24y^4z^3$",
+          answer: "$-6y^3z(5xY2+8x^3z+4yz^2$",
+          suggestedTime: 120
         },
-        {
-          id: "geo2",
-          question: "The area of a circle is $36\\pi$. What is the radius?",
-          answer: "$6$",
-          suggestedTime: 45
-        }
-      ]
-    },
-    {
-      id: "fractions",
-      name: "Fractions & Decimals",
-      problems: [
-        {
-          id: "frac1",
-          question: "What is $\\dfrac{3}{4} + \\dfrac{1}{6}$? (Write as a mixed number or improper fraction.)",
-          answer: "$\\dfrac{11}{12}$",
-          suggestedTime: 50
+                {
+          id: "factor2",
+          question: "Factor: $8x^2-14x+5$",
+          answer: "$(2x-1)(4x-5)$",
+          suggestedTime: 120
         },
-        {
-          id: "frac2",
-          question: "Convert $0.625$ to a fraction in simplest form.",
-          answer: "$\\dfrac{5}{8}$",
-          suggestedTime: 40
-        }
-      ]
-    },
-    {
-      id: "equations",
-      name: "Multi-step Equations",
-      problems: [
-        {
-          id: "eq1",
-          question: "Solve: $4(x - 2) = 3x + 5$",
-          answer: "$x = 13$",
-          suggestedTime: 70
-        }
       ]
     }
   ],
@@ -605,8 +598,8 @@ const GAME_CONFIG = {
     },
     {
       id: "triv3",
-      question: "What is the chemical symbol for gold?",
-      answer: "Au"
+      question: "In the 1890's, what cheese did a California man named David Jacks introduce?",
+      answer: "Monterey Jack"
     }
   ]
 };

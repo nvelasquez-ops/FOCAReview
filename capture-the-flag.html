@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Capture the Flag – Classroom Edition</title>
+  <!-- KaTeX -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+          onload="renderMathInElement(document.body, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1a1d26;
+      --muted: #5c6578;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --border: #e2e8f0;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+      --flag-blue: #3b82f6;
+      --flag-magenta: #d946ef;
+      --flag-orange: #f97316;
+      --flag-yellow: #eab308;
+    }
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #60a5fa;
+      --accent-hover: #3b82f6;
+      --border: #334155;
+      --shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      transition: background 0.3s, color 0.3s;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    h1 { font-size: 1.75rem; font-weight: 700; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.65rem 1.25rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--accent);
+      color: white;
+    }
+    .btn:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+    .btn-secondary { background: var(--muted); }
+    .btn-danger { background: var(--danger); }
+    .btn-success { background: var(--success); }
+    .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.875rem; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      margin-bottom: 1.25rem;
+    }
+    .screen { display: none; animation: fadeIn 0.35s ease; }
+    .screen.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    .player-flags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .flag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: white;
+    }
+    .flag.blue { background: var(--flag-blue); }
+    .flag.magenta { background: var(--flag-magenta); }
+    .flag.orange { background: var(--flag-orange); }
+    .flag.yellow { background: var(--flag-yellow); color: #1a1d26; }
+    .flag-icon { font-size: 1.1rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+    .category-btn {
+      width: 100%;
+      text-align: left;
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .category-btn:hover:not(:disabled) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--card)); }
+    .category-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .problem-box {
+      font-size: 1.35rem;
+      padding: 1.5rem;
+      background: color-mix(in srgb, var(--accent) 6%, var(--card));
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      margin: 1rem 0;
+      text-align: center;
+      min-height: 80px;
+    }
+    .timer {
+      font-size: 2.5rem;
+      font-weight: 700;
+      text-align: center;
+      margin: 1rem 0;
+      font-variant-numeric: tabular-nums;
+    }
+    .timer.warn { color: var(--danger); }
+    .player-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--muted) 8%, var(--card));
+      margin-bottom: 0.5rem;
+    }
+    .yesno-btns { display: flex; gap: 0.5rem; }
+    .steal-order { font-size: 0.95rem; color: var(--muted); margin-bottom: 1rem; }
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100; padding: 1rem;
+    }
+    .modal {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 1.75rem;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .modal h3 { margin-bottom: 0.75rem; }
+    .end-btn {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #ef4444;
+      color: white;
+      border: 2px solid #b91c1c;
+      font-size: 0.7rem;
+      font-weight: 700;
+      cursor: pointer;
+      opacity: 0.85;
+      z-index: 90;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.35);
+    }
+    .end-btn:hover { opacity: 1; transform: scale(1.08); }
+    .theme-toggle {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.4rem 0.7rem;
+      cursor: pointer;
+      color: var(--text);
+      font-size: 1.1rem;
+    }
+    .scoreboard-btn { margin-left: auto; }
+    .reveal-stage {
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+    .reveal-value {
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin: 1rem 0;
+      animation: pop 0.5s ease;
+    }
+    @keyframes pop {
+      0% { transform: scale(0.3); opacity: 0; }
+      70% { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .banner {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      color: white;
+      padding: 0.75rem 1.25rem;
+      border-radius: 12px;
+      font-weight: 600;
+      margin: 0.75rem 0;
+      text-align: center;
+    }
+    .hidden { display: none !important; }
+    .select-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin: 0.75rem 0; }
+    select, input[type="text"] {
+      padding: 0.6rem 0.9rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 1rem;
+    }
+    .instructions { color: var(--muted); font-size: 0.95rem; margin: 0.75rem 0; }
+    .powerup-card {
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 0.75rem;
+    }
+    .powerup-card:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, var(--card)); }
+    .powerup-card.selected { border-color: var(--success); background: color-mix(in srgb, var(--success) 10%, var(--card)); }
+    .winner-btn {
+      margin: 0.3rem;
+      min-width: 110px;
+    }
+    .winner-btn.selected {
+      background: var(--success) !important;
+      color: white !important;
+      border-color: var(--success) !important;
+      transform: scale(1.05);
+    }
+    .private-reveal {
+      background: #1e293b;
+      color: #f1f5f9;
+      padding: 1.5rem;
+      border-radius: 12px;
+      text-align: center;
+      margin: 1rem 0;
+      border: 2px dashed #64748b;
+    }
+    footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🚩 Capture the Flag</h1>
+      <div style="display:flex;gap:0.5rem;align-items:center;">
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌓</button>
+        <button class="btn btn-sm btn-ghost scoreboard-btn" id="scoreboardBtn" style="display:none;">Scoreboard</button>
+      </div>
+    </header>
+
+    <!-- ========== SCREEN: SETUP ========== -->
+    <div id="screen-setup" class="screen active">
+      <div class="card">
+        <h2>How many players?</h2>
+        <p class="instructions">Minimum 2, maximum 4.</p>
+        <div class="select-row" style="justify-content:center;margin:1.5rem 0;">
+          <button class="btn" data-players="2">2 Players</button>
+          <button class="btn" data-players="3">3 Players</button>
+          <button class="btn" data-players="4">4 Players</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== SCREEN: NAMES ========== -->
+    <div id="screen-names" class="screen">
+      <div class="card">
+        <h2>Name the players</h2>
+        <p class="instructions">Leave blank to keep default names.</p>
+        <div id="nameInputs"></div>
+        <button class="btn" id="btnNamesNext" style="margin-top:1.25rem;width:100%;">Next →</button>
+      </div>
+    </div>
+
+    <!-- ========== SCREEN: RULES ========== -->
+    <div id="screen-rules" class="screen">
+      <div class="card">
+        <h2>Game Rules</h2>
+        <ul style="margin:1rem 0 1.5rem 1.25rem;line-height:1.7;">
+          <li>Every player starts with <strong>12 flags</strong>: 3 blue, 3 magenta, 3 orange, 3 yellow.</li>
+          <li>Flags are worth an <em>unknown</em> number of points (revealed only at the end). Values range from −2 to +5 (no zeros).</li>
+          <li>Players choose a math category and solve a problem. Correct solvers (in random order) may <strong>steal one flag</strong> of any color from any other player.</li>
+          <li>If nobody is correct, each player loses one random flag they still own.</li>
+          <li>After every two regular problems, a random player is asked whether the group wants to play a <strong>Trivia</strong> round for a power-up. If they decline, the group must complete another math problem before a different player is asked.</li>
+          <li><strong>Power-ups</strong> (only one player can win a trivia round):
+            <ul style="margin-top:0.4rem;">
+              <li>🔄 <em>Redistribute a Color</em> – All players lose every flag of a chosen color; the flags are redistributed as evenly as possible (remainder discarded).</li>
+              <li>💥 <em>Force 2 Flags</em> – Choose one opponent and take any two of their flags (they become yours).</li>
+              <li>🔮 <em>Value Reveal</em> – Privately see the point value of one color of your choice. Only you learn it.</li>
+            </ul>
+          </li>
+          <li>You can end the game at any time with the small red <strong>END</strong> button in the bottom-right corner.</li>
+        </ul>
+        <button class="btn" id="btnStartGame" style="width:100%;">Start Game 🚀</button>
+      </div>
+    </div>
+
+    <!-- ========== SCREEN: HUB (choose category) ========== -->
+    <div id="screen-hub" class="screen">
+      <div class="card">
+        <h2>Choose a Category</h2>
+        <p class="instructions" id="hubStatus"></p>
+        <div id="categoryList" style="display:flex;flex-direction:column;gap:0.75rem;margin-top:1rem;"></div>
+      </div>
+      <div class="card">
+        <h3>Current Flags</h3>
+        <div id="hubFlags"></div>
+      </div>
+    </div>
+
+    <!-- ========== SCREEN: PROBLEM ========== -->
+    <div id="screen-problem" class="screen">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <h2 id="problemCategory"></h2>
+          <span class="timer" id="problemTimer">0:30</span>
+        </div>
+        <div class="problem-box" id="problemText"></div>
+        <p class="instructions">Work together or individually. When everyone is ready (and at least 30 seconds have passed), reveal the answer.</p>
+        <button class="btn" id="btnReveal" disabled style="width:100%;margin-top:1rem;">Reveal Answer</button>
+      </div>
+    </div>
+
+    <!-- ========== SCREEN: ANSWER ========== -->
+    <div id="screen-answer" class="screen">
+      <div class="card">
+        <h2>Answer</h2>
+        <div class="problem-box" id="answerText" style="font-size:1.5rem;"></div>
+        <button class="btn" id="btnAfterAnswer" style="width:100%;margin-top:1.25rem;">Who got it right? →</button>
+      </div>
+    </div>
+
+    <!-- ========== SCREEN: WHO CORRECT ========== -->
+    <div id="screen-correct" class="screen">
+      <div class="card">
+        <h2>Who solved it correctly?</h2>
+        <p class="instructions">Tap Yes or No for each player.</p>
+        <div id="correctList"></div>
+        <button class="btn" id="btnCorrectNext" style="width:100%;margin-top:1.25rem;" disabled>Continue →</button>
+      </div>
+    </div>
+
+    <!-- ========== SCREEN: STEAL ========== -->
+    <div id="screen-steal" class="screen">
+      <div class="card">
+        <h2>Steal a Flag!</h2>
+        <p class="steal-order" id="stealOrderText"></p>
+        <div id="stealControls"></div>
+        <button class="btn" id="btnStealConfirm" style="width:100%;margin-top:1rem;" disabled>Steal!</button>
+      </div>
+    </div>
+
+    <!-- ========== SCREEN: TRIVIA DECISION ========== -->
+    <div id="screen-trivia-decision" class="screen">
+      <div class="card">
+        <h2>Trivia Opportunity!</h2>
+        <p id="triviaAskText" style="font-size:1.2rem;margin:1.25rem 0;"></p>
+        <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+          <button class="btn btn-success" id="btnTriviaYes">Yes, let's play Trivia!</button>
+          <button class="btn btn-secondary" id="btnTriviaNo">Not this time</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== SCREEN: TRIVIA RULES ========== -->
+    <div id="screen-trivia-rules" class="screen">
+      <div class="card">
+        <h2>Trivia Round – Rules</h2>
+        <div class="banner">Honor system lock-in</div>
+        <p class="instructions" style="line-height:1.7;">
+          1. Write your answer on a whiteboard or paper.<br>
+          2. When ready, flip the board face-down and call out “First!”, “Second!”, “Third!”, etc.<br>
+          3. Do <strong>not</strong> flip your board back up or you lose your spot.<br>
+          4. After the answer is revealed, the group decides together (honor system) who locked in the correct answer first.<br>
+          5. Only that player receives the power-up.
+        </p>
+        <button class="btn" id="btnTriviaRulesConfirm" style="width:100%;margin-top:1.25rem;">Got it – Show the Question →</button>
+      </div>
+    </div>
+
+    <!-- ========== SCREEN: TRIVIA QUESTION ========== -->
+    <div id="screen-trivia" class="screen">
+      <div class="card">
+        <h2>Trivia Question 🎲</h2>
+        <div class="problem-box" id="triviaQuestion"></div>
+        <button class="btn" id="btnTriviaReveal" style="width:100%;margin-top:1rem;">Reveal Answer</button>
+      </div>
+    </div>
+
+    <!-- ========== SCREEN: TRIVIA ANSWER ========== -->
+    <div id="screen-trivia-answer" class="screen">
+      <div class="card">
+        <h2>Trivia Answer</h2>
+        <div class="problem-box" id="triviaAnswerText" style="font-size:1.4rem;"></div>
+        <p class="instructions" style="margin-top:1rem;font-weight:600;">Who got the problem right first?</p>
+        <div id="triviaWinnerSelect" style="margin:1rem 0;text-align:center;"></div>
+        <p id="triviaChosenText" style="font-weight:600;color:var(--success);min-height:1.5em;"></p>
+        <button class="btn" id="btnTriviaWinner" style="width:100%;" disabled>Award Power-up →</button>
+        <button class="btn btn-ghost" id="btnTriviaNobody" style="width:100%;margin-top:0.5rem;">Nobody got it right</button>
+      </div>
+    </div>
+
+    <!-- ========== SCREEN: POWER-UP ========== -->
+    <div id="screen-powerup" class="screen">
+      <div class="card">
+        <h2>Choose a Power-up</h2>
+        <p id="powerupWinnerText" class="instructions"></p>
+        <div class="powerup-card" data-power="redistribute">
+          <strong>🔄 Redistribute a Color</strong><br>
+          <span style="font-size:0.9rem;color:var(--muted);">All players lose every flag of a chosen color. Those flags are redistributed evenly (remainder discarded).</span>
+        </div>
+        <div class="powerup-card" data-power="force">
+          <strong>💥 Force 2 Flags</strong><br>
+          <span style="font-size:0.9rem;color:var(--muted);">Choose one opponent and take any two of their flags (they become yours).</span>
+        </div>
+        <div class="powerup-card" data-power="reveal">
+          <strong>🔮 Value Reveal</strong><br>
+          <span style="font-size:0.9rem;color:var(--muted);">Privately see the point value of one color. Only you learn it.</span>
+        </div>
+        <div id="powerupExtra" style="margin-top:1rem;"></div>
+        <button class="btn" id="btnPowerupConfirm" style="width:100%;margin-top:1rem;" disabled>Use Power-up</button>
+      </div>
+    </div>
+
+    <!-- ========== SCREEN: PRIVATE REVEAL ========== -->
+    <div id="screen-private-reveal" class="screen">
+      <div class="card">
+        <h2>Private Value Reveal</h2>
+        <p class="instructions">Only the power-up winner should look at the screen. Everyone else look away!</p>
+        <div class="private-reveal" id="privateRevealContent"></div>
+        <button class="btn" id="btnPrivateDone" style="width:100%;margin-top:1rem;">Done – Return to Game</button>
+      </div>
+    </div>
+
+    <!-- ========== SCREEN: END REVEAL ========== -->
+    <div id="screen-end" class="screen">
+      <div class="card reveal-stage">
+        <h2 id="endTitle">Let's find out how much each flag was worth...</h2>
+        <div id="endContent"></div>
+      </div>
+    </div>
+
+    <!-- ========== SCREEN: FINAL SCORES ========== -->
+    <div id="screen-final" class="screen">
+      <div class="card">
+        <h2>Final Scores 🏆</h2>
+        <div id="finalScores"></div>
+        <div id="finalBanners"></div>
+        <button class="btn" id="btnRestart" style="width:100%;margin-top:1.5rem;">Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Always-visible End Game button -->
+  <button class="end-btn" id="endGameBtn" title="End Game" style="display:none;">END</button>
+
+  <!-- Modal for early reveal warning -->
+  <div class="modal-overlay hidden" id="earlyModal">
+    <div class="modal">
+      <h3>Hold on! ⏱️</h3>
+      <p id="earlyMsg">Did you solve that one a little too fast? Wait at least <strong id="earlySeconds">30</strong> more seconds.</p>
+      <button class="btn" id="earlyOk" style="margin-top:1rem;">Got it</button>
+    </div>
+  </div>
+
+  <!-- Scoreboard modal -->
+  <div class="modal-overlay hidden" id="scoreboardModal">
+    <div class="modal" style="max-width:520px;text-align:left;">
+      <h3 style="text-align:center;">Scoreboard</h3>
+      <div id="scoreboardContent"></div>
+      <button class="btn" id="scoreboardClose" style="width:100%;margin-top:1rem;">Close</button>
+    </div>
+  </div>
+
+  <footer>
+    Capture the Flag – Classroom Template · Edit GAME_CONFIG to customize problems
+  </footer>
+
+<script>
+/* ============================================================
+   GAME CONFIG – EDIT THIS SECTION TO ADD YOUR OWN CONTENT
+   ============================================================ */
+const GAME_CONFIG = {
+  possiblePointValues: [-2, -1, 1, 2, 3, 4, 5],
+  minSolveSeconds: 30,
+
+  categories: [
+    {
+      id: "algebra",
+      name: "Algebra",
+      problems: [
+        {
+          id: "alg1",
+          question: "Solve for $x$: $2x + 5 = 13$",
+          answer: "$x = 4$",
+          suggestedTime: 45
+        },
+        {
+          id: "alg2",
+          question: "Simplify: $3(x - 4) + 2x$",
+          answer: "$5x - 12$",
+          suggestedTime: 60
+        },
+        {
+          id: "alg3",
+          question: "Solve: $\\dfrac{x}{3} + 7 = 10$",
+          answer: "$x = 9$",
+          suggestedTime: 50
+        }
+      ]
+    },
+    {
+      id: "geometry",
+      name: "Geometry",
+      problems: [
+        {
+          id: "geo1",
+          question: "A right triangle has legs of length 6 and 8. What is the length of the hypotenuse?",
+          answer: "$10$",
+          suggestedTime: 40
+        },
+        {
+          id: "geo2",
+          question: "The area of a circle is $36\\pi$. What is the radius?",
+          answer: "$6$",
+          suggestedTime: 45
+        }
+      ]
+    },
+    {
+      id: "fractions",
+      name: "Fractions & Decimals",
+      problems: [
+        {
+          id: "frac1",
+          question: "What is $\\dfrac{3}{4} + \\dfrac{1}{6}$? (Write as a mixed number or improper fraction.)",
+          answer: "$\\dfrac{11}{12}$",
+          suggestedTime: 50
+        },
+        {
+          id: "frac2",
+          question: "Convert $0.625$ to a fraction in simplest form.",
+          answer: "$\\dfrac{5}{8}$",
+          suggestedTime: 40
+        }
+      ]
+    },
+    {
+      id: "equations",
+      name: "Multi-step Equations",
+      problems: [
+        {
+          id: "eq1",
+          question: "Solve: $4(x - 2) = 3x + 5$",
+          answer: "$x = 13$",
+          suggestedTime: 70
+        }
+      ]
+    }
+  ],
+
+  // Trivia is handled separately (never appears as a selectable category)
+  trivia: [
+    {
+      id: "triv1",
+      question: "What is the capital of France?",
+      answer: "Paris"
+    },
+    {
+      id: "triv2",
+      question: "How many continents are there on Earth?",
+      answer: "7"
+    },
+    {
+      id: "triv3",
+      question: "What is the chemical symbol for gold?",
+      answer: "Au"
+    }
+  ]
+};
+
+/* ============================================================
+   GAME STATE
+   ============================================================ */
+const COLORS = ["blue", "magenta", "orange", "yellow"];
+const COLOR_EMOJI = { blue: "🔵", magenta: "🟣", orange: "🟠", yellow: "🟡" };
+
+let state = {
+  players: [],
+  usedProblems: new Set(),
+  usedTrivia: new Set(),
+  regularProblemsDone: 0,
+  problemsSinceLastTrivia: 0,
+  lastTriviaDecider: null,
+  pendingTriviaCheck: false,   // true when we should offer trivia after returning to hub
+  currentCategory: null,
+  currentProblem: null,
+  correctPlayers: [],
+  stealQueue: [],
+  currentStealer: null,
+  selectedPower: null,
+  powerupWinnerId: null,
+  pointValues: {},             // assigned at game start (hidden)
+  theme: "light"
+};
+
+/* ============================================================
+   UTILS
+   ============================================================ */
+function $(id) { return document.getElementById(id); }
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  $(id).classList.add("active");
+  if (window.renderMathInElement) {
+    setTimeout(() => renderMathInElement($(id), {
+      delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+    }), 40);
+  }
+}
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function randomFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function flagsHtml(flags) {
+  return COLORS.map(c => 
+    `<span class="flag ${c}"><span class="flag-icon">${COLOR_EMOJI[c]}</span> ${flags[c]}</span>`
+  ).join("");
+}
+
+/* ============================================================
+   THEME
+   ============================================================ */
+$("themeToggle").addEventListener("click", () => {
+  state.theme = state.theme === "light" ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", state.theme === "dark" ? "dark" : "");
+});
+
+/* ============================================================
+   SETUP FLOW
+   ============================================================ */
+document.querySelectorAll("[data-players]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const n = parseInt(btn.dataset.players);
+    state.players = [];
+    for (let i = 1; i <= n; i++) {
+      state.players.push({
+        id: i,
+        name: `Player ${i}`,
+        flags: { blue: 3, magenta: 3, orange: 3, yellow: 3 },
+        problemsCorrect: 0
+      });
+    }
+    const container = $("nameInputs");
+    container.innerHTML = "";
+    state.players.forEach(p => {
+      const div = document.createElement("div");
+      div.style.marginBottom = "0.75rem";
+      div.innerHTML = `
+        <label>Player ${p.id}</label><br>
+        <input type="text" id="name-${p.id}" placeholder="Player ${p.id}" style="width:100%;margin-top:0.25rem;">
+      `;
+      container.appendChild(div);
+    });
+    showScreen("screen-names");
+  });
+});
+
+$("btnNamesNext").addEventListener("click", () => {
+  state.players.forEach(p => {
+    const val = $(`name-${p.id}`).value.trim();
+    if (val) p.name = val;
+  });
+  showScreen("screen-rules");
+});
+
+$("btnStartGame").addEventListener("click", () => {
+  // Assign hidden point values at the start so Value Reveal works
+  const vals = shuffle([...GAME_CONFIG.possiblePointValues]);
+  state.pointValues = {};
+  COLORS.forEach((c, i) => state.pointValues[c] = vals[i % vals.length]);
+
+  $("scoreboardBtn").style.display = "inline-flex";
+  $("endGameBtn").style.display = "block";
+  updateHub();
+  showScreen("screen-hub");
+});
+
+/* ============================================================
+   HUB
+   ============================================================ */
+function updateHub() {
+  // After a regular problem, check if we should offer trivia
+  if (state.pendingTriviaCheck) {
+    state.pendingTriviaCheck = false;
+    if (state.regularProblemsDone >= 2 && state.problemsSinceLastTrivia >= 2) {
+      offerTrivia();
+      return;
+    }
+  }
+
+  const status = $("hubStatus");
+  status.textContent = `Regular problems completed: ${state.regularProblemsDone} · Problems since last trivia offer: ${state.problemsSinceLastTrivia}`;
+
+  const list = $("categoryList");
+  list.innerHTML = "";
+
+  GAME_CONFIG.categories.forEach(cat => {
+    const available = cat.problems.filter(p => !state.usedProblems.has(p.id));
+    const btn = document.createElement("button");
+    btn.className = "category-btn";
+    btn.disabled = available.length === 0;
+    btn.textContent = `${cat.name} (${available.length} left)`;
+    if (!btn.disabled) {
+      btn.addEventListener("click", () => startProblem(cat));
+    }
+    list.appendChild(btn);
+  });
+
+  const flagsDiv = $("hubFlags");
+  flagsDiv.innerHTML = state.players.map(p => `
+    <div class="player-row">
+      <strong>${p.name}</strong>
+      <div class="player-flags">${flagsHtml(p.flags)}</div>
+    </div>
+  `).join("");
+}
+
+function offerTrivia() {
+  const candidates = state.players.filter(p => p.id !== state.lastTriviaDecider);
+  const decider = randomFrom(candidates.length ? candidates : state.players);
+  state.lastTriviaDecider = decider.id;
+  $("triviaAskText").textContent = `${decider.name}, you have been randomly selected to decide if you all play a Trivia round for a chance at a power-up. What do you say?`;
+  showScreen("screen-trivia-decision");
+}
+
+function startProblem(cat) {
+  const available = cat.problems.filter(p => !state.usedProblems.has(p.id));
+  if (!available.length) return;
+  const problem = randomFrom(available);
+  state.currentCategory = cat;
+  state.currentProblem = problem;
+  state.usedProblems.add(problem.id);
+
+  $("problemCategory").textContent = cat.name;
+  $("problemText").innerHTML = problem.question;
+  $("btnReveal").disabled = true;
+  $("btnReveal").textContent = "Reveal Answer";
+
+  showScreen("screen-problem");
+  startTimer(GAME_CONFIG.minSolveSeconds);
+}
+
+/* ============================================================
+   TIMER
+   ============================================================ */
+let timerInterval = null;
+let secondsLeft = 0;
+
+function startTimer(seconds) {
+  clearInterval(timerInterval);
+  secondsLeft = seconds;
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    secondsLeft--;
+    updateTimerDisplay();
+    if (secondsLeft <= 0) {
+      clearInterval(timerInterval);
+      $("btnReveal").disabled = false;
+      $("btnReveal").textContent = "Reveal Answer ✓";
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(Math.max(0, secondsLeft) / 60);
+  const s = Math.max(0, secondsLeft) % 60;
+  const el = $("problemTimer");
+  el.textContent = `${m}:${s.toString().padStart(2, "0")}`;
+  el.classList.toggle("warn", secondsLeft <= 10 && secondsLeft > 0);
+}
+
+$("btnReveal").addEventListener("click", () => {
+  if (secondsLeft > 0) {
+    $("earlySeconds").textContent = secondsLeft;
+    $("earlyModal").classList.remove("hidden");
+    return;
+  }
+  clearInterval(timerInterval);
+  $("answerText").innerHTML = state.currentProblem.answer;
+  showScreen("screen-answer");
+});
+
+$("earlyOk").addEventListener("click", () => $("earlyModal").classList.add("hidden"));
+
+$("btnAfterAnswer").addEventListener("click", () => {
+  const list = $("correctList");
+  list.innerHTML = "";
+  state.correctPlayers = [];
+  $("btnCorrectNext").disabled = true;
+
+  state.players.forEach(p => {
+    const row = document.createElement("div");
+    row.className = "player-row";
+    row.dataset.pid = p.id;
+    row.innerHTML = `
+      <strong>${p.name}</strong>
+      <div class="yesno-btns">
+        <button class="btn btn-sm btn-success" data-val="yes">Yes</button>
+        <button class="btn btn-sm btn-danger" data-val="no">No</button>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+
+  list.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const row = btn.closest(".player-row");
+      const pid = parseInt(row.dataset.pid);
+      const val = btn.dataset.val;
+      row.querySelectorAll("button").forEach(b => {
+        b.style.opacity = "0.35";
+        b.classList.remove("selected");
+      });
+      btn.style.opacity = "1";
+      btn.classList.add("selected");
+
+      if (val === "yes") {
+        if (!state.correctPlayers.includes(pid)) state.correctPlayers.push(pid);
+      } else {
+        state.correctPlayers = state.correctPlayers.filter(id => id !== pid);
+      }
+
+      // Enable continue when every row has a selection
+      const allAnswered = Array.from(list.querySelectorAll(".player-row")).every(r =>
+        Array.from(r.querySelectorAll("button")).some(b => b.classList.contains("selected"))
+      );
+      $("btnCorrectNext").disabled = !allAnswered;
+    });
+  });
+  showScreen("screen-correct");
+});
+
+$("btnCorrectNext").addEventListener("click", () => {
+  state.correctPlayers.forEach(pid => {
+    const p = state.players.find(pl => pl.id === pid);
+    if (p) p.problemsCorrect++;
+  });
+
+  state.regularProblemsDone++;
+  state.problemsSinceLastTrivia++;
+  state.pendingTriviaCheck = true;   // offer trivia (if eligible) when we return to hub
+
+  if (state.correctPlayers.length === 0) {
+    state.players.forEach(p => {
+      const owned = COLORS.filter(c => p.flags[c] > 0);
+      if (owned.length) {
+        const color = randomFrom(owned);
+        p.flags[color]--;
+      }
+    });
+    alert("Nobody got it right! Each player loses one random flag (if they had any).");
+    updateHub();
+    return;
+  }
+
+  state.stealQueue = shuffle([...state.correctPlayers]);
+  nextSteal();
+});
+
+/* ============================================================
+   STEAL PHASE
+   ============================================================ */
+function nextSteal() {
+  if (state.stealQueue.length === 0) {
+    updateHub();
+    return;
+  }
+  state.currentStealer = state.stealQueue.shift();
+  const stealer = state.players.find(p => p.id === state.currentStealer);
+  $("stealOrderText").textContent = `${stealer.name}'s turn to steal (order randomized)`;
+
+  const controls = $("stealControls");
+  controls.innerHTML = `
+    <label>Steal from:</label>
+    <select id="stealTarget">
+      ${state.players.filter(p => p.id !== stealer.id).map(p => 
+        `<option value="${p.id}">${p.name}</option>`
+      ).join("")}
+    </select>
+    <label style="margin-left:0.75rem;">Color:</label>
+    <select id="stealColor">
+      ${COLORS.map(c => `<option value="${c}">${COLOR_EMOJI[c]} ${c}</option>`).join("")}
+    </select>
+    <div id="stealPreview" style="margin-top:0.75rem;color:var(--muted);"></div>
+  `;
+
+  function updatePreview() {
+    const tid = parseInt($("stealTarget").value);
+    const color = $("stealColor").value;
+    const target = state.players.find(p => p.id === tid);
+    const has = target.flags[color];
+    $("stealPreview").textContent = has > 0 
+      ? `${target.name} has ${has} ${color} flag(s). You can steal one.`
+      : `${target.name} has 0 ${color} flags — choose another color or player.`;
+    $("btnStealConfirm").disabled = has === 0;
+  }
+  $("stealTarget").addEventListener("change", updatePreview);
+  $("stealColor").addEventListener("change", updatePreview);
+  updatePreview();
+  showScreen("screen-steal");
+}
+
+$("btnStealConfirm").addEventListener("click", () => {
+  const tid = parseInt($("stealTarget").value);
+  const color = $("stealColor").value;
+  const stealer = state.players.find(p => p.id === state.currentStealer);
+  const target = state.players.find(p => p.id === tid);
+  if (target.flags[color] > 0) {
+    target.flags[color]--;
+    stealer.flags[color]++;
+  }
+  nextSteal();
+});
+
+/* ============================================================
+   TRIVIA
+   ============================================================ */
+$("btnTriviaYes").addEventListener("click", () => {
+  showScreen("screen-trivia-rules");
+});
+
+$("btnTriviaNo").addEventListener("click", () => {
+  // Declined → must play another math round before asking someone else
+  // problemsSinceLastTrivia stays as-is so the counter keeps counting
+  updateHub();
+});
+
+$("btnTriviaRulesConfirm").addEventListener("click", () => {
+  const available = GAME_CONFIG.trivia.filter(t => !state.usedTrivia.has(t.id));
+  if (!available.length) {
+    alert("No more trivia questions left.");
+    updateHub();
+    return;
+  }
+  const problem = randomFrom(available);
+  state.usedTrivia.add(problem.id);
+  state.currentProblem = problem;
+  state.problemsSinceLastTrivia = 0;   // reset after accepting trivia
+
+  $("triviaQuestion").innerHTML = problem.question;
+  showScreen("screen-trivia");
+});
+
+$("btnTriviaReveal").addEventListener("click", () => {
+  $("triviaAnswerText").innerHTML = state.currentProblem.answer;
+  const sel = $("triviaWinnerSelect");
+  sel.innerHTML = "";
+  $("triviaChosenText").textContent = "";
+  $("btnTriviaWinner").disabled = true;
+
+  state.players.forEach(p => {
+    const btn = document.createElement("button");
+    btn.className = "btn btn-sm btn-ghost winner-btn";
+    btn.textContent = p.name;
+    btn.dataset.pid = p.id;
+    btn.addEventListener("click", () => {
+      sel.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      $("triviaChosenText").textContent = `Selected: ${p.name}`;
+      $("btnTriviaWinner").disabled = false;
+      $("btnTriviaWinner").dataset.pid = p.id;
+    });
+    sel.appendChild(btn);
+  });
+  showScreen("screen-trivia-answer");
+});
+
+$("btnTriviaNobody").addEventListener("click", () => {
+  updateHub();
+});
+
+$("btnTriviaWinner").addEventListener("click", () => {
+  const pid = parseInt($("btnTriviaWinner").dataset.pid);
+  state.powerupWinnerId = pid;
+  const winner = state.players.find(p => p.id === pid);
+  $("powerupWinnerText").textContent = `${winner.name} wins the power-up! Choose one:`;
+  state.selectedPower = null;
+  $("btnPowerupConfirm").disabled = true;
+  $("powerupExtra").innerHTML = "";
+  document.querySelectorAll(".powerup-card").forEach(c => c.classList.remove("selected"));
+  showScreen("screen-powerup");
+});
+
+/* ============================================================
+   POWER-UPS
+   ============================================================ */
+document.querySelectorAll(".powerup-card").forEach(card => {
+  card.addEventListener("click", () => {
+    document.querySelectorAll(".powerup-card").forEach(c => c.classList.remove("selected"));
+    card.classList.add("selected");
+    state.selectedPower = card.dataset.power;
+    const extra = $("powerupExtra");
+    extra.innerHTML = "";
+    $("btnPowerupConfirm").disabled = false;
+
+    const winnerId = state.powerupWinnerId;
+
+    if (state.selectedPower === "redistribute") {
+      extra.innerHTML = `
+        <label>Choose color to redistribute:</label><br>
+        <select id="puColor" style="margin-top:0.4rem;">${COLORS.map(c => `<option value="${c}">${COLOR_EMOJI[c]} ${c}</option>`).join("")}</select>
+      `;
+    } else if (state.selectedPower === "force") {
+      extra.innerHTML = `
+        <label>Target player:</label><br>
+        <select id="puTarget" style="margin-top:0.4rem;">${state.players.filter(p => p.id !== winnerId).map(p => 
+          `<option value="${p.id}">${p.name}</option>`
+        ).join("")}</select>
+        <div style="margin-top:0.75rem;">
+          <label>First flag color:</label><br>
+          <select id="puColor1">${COLORS.map(c => `<option value="${c}">${COLOR_EMOJI[c]} ${c}</option>`).join("")}</select>
+        </div>
+        <div style="margin-top:0.5rem;">
+          <label>Second flag color:</label><br>
+          <select id="puColor2">${COLORS.map(c => `<option value="${c}">${COLOR_EMOJI[c]} ${c}</option>`).join("")}</select>
+        </div>
+        <p id="forcePreview" style="margin-top:0.6rem;color:var(--muted);font-size:0.9rem;"></p>
+      `;
+      // live validation
+      const updateForcePreview = () => {
+        const tid = parseInt($("puTarget").value);
+        const c1 = $("puColor1").value;
+        const c2 = $("puColor2").value;
+        const target = state.players.find(p => p.id === tid);
+        let ok = true;
+        let msg = "";
+        if (c1 === c2) {
+          if (target.flags[c1] < 2) {
+            ok = false;
+            msg = `${target.name} only has ${target.flags[c1]} ${c1} flag(s). Cannot take 2.`;
+          } else {
+            msg = `Will take 2 ${c1} flags from ${target.name}.`;
+          }
+        } else {
+          if (target.flags[c1] < 1) {
+            ok = false;
+            msg = `${target.name} has no ${c1} flags.`;
+          } else if (target.flags[c2] < 1) {
+            ok = false;
+            msg = `${target.name} has no ${c2} flags.`;
+          } else {
+            msg = `Will take 1 ${c1} + 1 ${c2} from ${target.name}.`;
+          }
+        }
+        $("forcePreview").textContent = msg;
+        $("btnPowerupConfirm").disabled = !ok;
+      };
+      setTimeout(() => {
+        ["puTarget","puColor1","puColor2"].forEach(id => {
+          const el = $(id);
+          if (el) el.addEventListener("change", updateForcePreview);
+        });
+        updateForcePreview();
+      }, 0);
+    } else if (state.selectedPower === "reveal") {
+      extra.innerHTML = `
+        <label>Choose color to reveal (only you will see the value):</label><br>
+        <select id="puRevealColor" style="margin-top:0.4rem;">${COLORS.map(c => `<option value="${c}">${COLOR_EMOJI[c]} ${c}</option>`).join("")}</select>
+      `;
+    }
+  });
+});
+
+$("btnPowerupConfirm").addEventListener("click", () => {
+  const winner = state.players.find(p => p.id === state.powerupWinnerId);
+
+  if (state.selectedPower === "redistribute") {
+    const color = $("puColor").value;
+    let total = 0;
+    state.players.forEach(p => {
+      total += p.flags[color];
+      p.flags[color] = 0;
+    });
+    const n = state.players.length;
+    const each = Math.floor(total / n);
+    state.players.forEach(p => p.flags[color] = each);
+    alert(`All ${color} flags redistributed! Each player now has ${each}. (${total % n} discarded)`);
+    updateHub();
+  } else if (state.selectedPower === "force") {
+    const tid = parseInt($("puTarget").value);
+    const c1 = $("puColor1").value;
+    const c2 = $("puColor2").value;
+    const target = state.players.find(p => p.id === tid);
+
+    // Take flags from target and give to winner
+    if (c1 === c2) {
+      if (target.flags[c1] >= 2) {
+        target.flags[c1] -= 2;
+        winner.flags[c1] += 2;
+      }
+    } else {
+      if (target.flags[c1] >= 1) {
+        target.flags[c1]--;
+        winner.flags[c1]++;
+      }
+      if (target.flags[c2] >= 1) {
+        target.flags[c2]--;
+        winner.flags[c2]++;
+      }
+    }
+    alert(`${winner.name} takes the flags from ${target.name}!`);
+    updateHub();
+  } else if (state.selectedPower === "reveal") {
+    const color = $("puRevealColor").value;
+    const value = state.pointValues[color];
+    $("privateRevealContent").innerHTML = `
+      <div style="font-size:1.1rem;margin-bottom:0.5rem;">${COLOR_EMOJI[color]} ${color.toUpperCase()} flags are worth</div>
+      <div style="font-size:3rem;font-weight:800;">${value > 0 ? "+" : ""}${value}</div>
+      <div>points each</div>
+      <p style="margin-top:1rem;font-size:0.9rem;opacity:0.8;">Remember this number. Do not tell the others!</p>
+    `;
+    showScreen("screen-private-reveal");
+    return; // don't go to hub yet
+  }
+});
+
+$("btnPrivateDone").addEventListener("click", () => {
+  updateHub();
+});
+
+/* ============================================================
+   SCOREBOARD
+   ============================================================ */
+$("scoreboardBtn").addEventListener("click", () => {
+  const content = $("scoreboardContent");
+  content.innerHTML = state.players.map(p => `
+    <div class="player-row" style="margin-bottom:0.75rem;">
+      <div>
+        <strong>${p.name}</strong><br>
+        <small>${p.problemsCorrect} problem(s) correct</small>
+      </div>
+      <div class="player-flags">${flagsHtml(p.flags)}</div>
+    </div>
+  `).join("");
+  $("scoreboardModal").classList.remove("hidden");
+});
+$("scoreboardClose").addEventListener("click", () => $("scoreboardModal").classList.add("hidden"));
+
+/* ============================================================
+   END GAME
+   ============================================================ */
+$("endGameBtn").addEventListener("click", () => {
+  if (!confirm("End the game and reveal the flag values?")) return;
+  clearInterval(timerInterval);
+  $("endTitle").textContent = "Let's find out how much each flag was worth...";
+  $("endContent").innerHTML = "";
+  showScreen("screen-end");
+  runRevealSequence();
+});
+
+async function runRevealSequence() {
+  const content = $("endContent");
+  for (const color of COLORS) {
+    await sleep(3500);
+    content.innerHTML = `
+      <div style="font-size:1.5rem;margin-bottom:0.5rem;">${COLOR_EMOJI[color]} ${color.toUpperCase()}</div>
+      <div class="reveal-value" style="color:var(--flag-${color})">${state.pointValues[color] > 0 ? "+" : ""}${state.pointValues[color]}</div>
+      <p>points each</p>
+    `;
+  }
+  await sleep(3000);
+  $("endTitle").textContent = "Calculating final scores...";
+  content.innerHTML = "";
+  for (const p of state.players) {
+    await sleep(2800);
+    let score = 0;
+    let breakdown = COLORS.map(c => {
+      const pts = p.flags[c] * state.pointValues[c];
+      score += pts;
+      return `${COLOR_EMOJI[c]} ${p.flags[c]} × ${state.pointValues[c]} = ${pts}`;
+    }).join("<br>");
+    content.innerHTML = `
+      <h3>${p.name}</h3>
+      <div style="text-align:left;display:inline-block;margin:1rem 0;">${breakdown}</div>
+      <div class="reveal-value">${score} pts</div>
+    `;
+  }
+  await sleep(2500);
+  showFinalScores();
+}
+
+function showFinalScores() {
+  const scores = state.players.map(p => {
+    let score = 0;
+    COLORS.forEach(c => score += p.flags[c] * state.pointValues[c]);
+    return { ...p, score };
+  }).sort((a, b) => b.score - a.score);
+
+  $("finalScores").innerHTML = scores.map((p, i) => `
+    <div class="player-row" style="margin-bottom:0.75rem;">
+      <div>
+        <strong>${i === 0 ? "🥇 " : i === 1 ? "🥈 " : i === 2 ? "🥉 " : ""}${p.name}</strong>
+        <div class="player-flags" style="margin-top:0.25rem;">${flagsHtml(p.flags)}</div>
+      </div>
+      <div style="font-size:1.4rem;font-weight:700;">${p.score} pts</div>
+    </div>
+  `).join("");
+
+  const banners = [];
+  const mostCorrect = [...state.players].sort((a, b) => b.problemsCorrect - a.problemsCorrect)[0];
+  if (mostCorrect.problemsCorrect > 0) {
+    banners.push(`🎯 ${mostCorrect.name} got the most problems right (${mostCorrect.problemsCorrect})! Great job!`);
+  }
+  COLORS.forEach(c => {
+    const most = [...state.players].sort((a, b) => b.flags[c] - a.flags[c])[0];
+    if (most.flags[c] > 0) {
+      banners.push(`${COLOR_EMOJI[c]} ${most.name} collected the most ${c} flags!`);
+    }
+  });
+  $("finalBanners").innerHTML = banners.map(b => `<div class="banner">${b}</div>`).join("");
+  showScreen("screen-final");
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+$("btnRestart").addEventListener("click", () => location.reload());
+</script>
+</body>
+</html>

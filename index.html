@@ -793,7 +793,9 @@ function startProblem(cat) {
   $("btnReveal").textContent = "Reveal Answer";
 
   showScreen("screen-problem");
-  startTimer(GAME_CONFIG.minSolveSeconds);
+  // Use this problem's suggestedTime as the countdown; unlock Reveal after 30s (or sooner if suggestedTime is shorter)
+  const duration = problem.suggestedTime || GAME_CONFIG.minSolveSeconds;
+  startTimer(duration);
 }
 
 /* ============================================================
@@ -801,20 +803,42 @@ function startProblem(cat) {
    ============================================================ */
 let timerInterval = null;
 let secondsLeft = 0;
+let timerTotal = 0;       // full suggested time
+let unlockAfter = 30;     // seconds that must elapse before Reveal is allowed
 
 function startTimer(seconds) {
   clearInterval(timerInterval);
+  timerTotal = seconds;
   secondsLeft = seconds;
+  // Unlock after 30 seconds have elapsed, or at the end if suggestedTime < 30
+  unlockAfter = Math.min(GAME_CONFIG.minSolveSeconds, seconds);
+  $("btnReveal").disabled = true;
+  $("btnReveal").textContent = "Reveal Answer";
   updateTimerDisplay();
+  updateRevealButton();
+
   timerInterval = setInterval(() => {
     secondsLeft--;
     updateTimerDisplay();
+    updateRevealButton();
     if (secondsLeft <= 0) {
       clearInterval(timerInterval);
-      $("btnReveal").disabled = false;
-      $("btnReveal").textContent = "Reveal Answer ✓";
     }
   }, 1000);
+}
+
+function elapsedSeconds() {
+  return timerTotal - secondsLeft;
+}
+
+function updateRevealButton() {
+  if (elapsedSeconds() >= unlockAfter) {
+    $("btnReveal").disabled = false;
+    $("btnReveal").textContent = "Reveal Answer ✓";
+  } else {
+    $("btnReveal").disabled = true;
+    $("btnReveal").textContent = "Reveal Answer";
+  }
 }
 
 function updateTimerDisplay() {
@@ -826,8 +850,9 @@ function updateTimerDisplay() {
 }
 
 $("btnReveal").addEventListener("click", () => {
-  if (secondsLeft > 0) {
-    $("earlySeconds").textContent = secondsLeft;
+  const remainingLock = unlockAfter - elapsedSeconds();
+  if (remainingLock > 0) {
+    $("earlySeconds").textContent = Math.ceil(remainingLock);
     $("earlyModal").classList.remove("hidden");
     return;
   }

@@ -13,7 +13,8 @@
   <script>
 // ===== GAME MODE =====
 var DEBUG_MODE = false;        // true = show an answer-key viewer instead of the game (set false for students!)
-var REFLECTION_MODE = false;  // true = add a 90-second written-reflection screen after each explanation
+var EXPLAINER_MODE = false;    // true = a random correct player explains the problem for +1 bonus point; false = skip explaining (no bonus point)
+var REFLECTION_MODE = false;  // true = add a 90-second written-reflection screen after each explanation (only used when EXPLAINER_MODE is true)
 
 // ===== PLAYERS =====
 var MIN_PLAYERS = 2;
@@ -383,7 +384,8 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
  *   debug (only if DEBUG_MODE) -> setup -> rules -> pointwager -> question
  *     -> selfcheck -> [explain -> (reflection if REFLECTION_MODE) -> bonus]
  *     -> pointwager (next question) ... -> results -> setup (Play Again)
- *   "explain" is skipped when nobody answered correctly.
+ *   "explain" is skipped when nobody answered correctly OR when EXPLAINER_MODE is false
+ *   (then the game goes straight to the next question; REFLECTION_MODE is also unused).
  *   "End Early" on the pointwager screen jumps straight to results.
  *
  * WAGER RULES
@@ -602,7 +604,7 @@ function App() {
       correctIds.push(p.id);
       return Object.assign({}, p, {pts: p.pts + wagers[p.id]});
     }));
-    if (correctIds.length > 0) {
+    if (EXPLAINER_MODE && correctIds.length > 0) {
       setExplainerId(correctIds[Math.floor(Math.random() * correctIds.length)]);
       setScreen('explain');
     } else {
@@ -686,7 +688,7 @@ function App() {
           h('p', null, '✅ Correct? Win those points!'),
           h('p', null, '❌ Wrong? No points earned'),
           h('p', null, '🔄 Point options reset every ' + POINT_SETTINGS.questionsPerRound + ' questions'),
-          h('p', null, '🌟 Explain? Earn bonus point!'),
+          EXPLAINER_MODE && h('p', null, '🌟 Explain? Earn bonus point!'),
           h('p', {className: "text-red-600 font-bold"}, '⚠️ DON\'T ERASE ANSWERS!')),
         h('button', {onClick: function () { goToWager(0); }, className: "w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700"}, 'Let\'s Play!')));
   }
